@@ -34,9 +34,8 @@ body{
     top:0px;
     min-width: 50px;
     display:block;
-    color:red;
-    padding:15px 20px;
-    font-size: 25px;
+    padding:10px 20px;
+    font-size: 16px;
 }
 
 
@@ -59,12 +58,11 @@ a.btn:first-child{
   
 }
 a.previous {
-	padding: 12px;
+	padding: 6px;
 	text-align: center;
 	display: block;
 	width: 41px;
-	font-weight: 700px;
-    font-size: 30px;
+    font-size: 25px;
     color:#fff;
 	text-decoration: none;
 }
@@ -232,6 +230,14 @@ color: #fff;
     background-color: red;
 }
 @media (min-width: 720px ){
+    a.previous {
+        padding: 12px;
+    font-size: 30px;
+        
+    }
+    #start #points{
+        font-size: 25px
+    }
 .fly{
     width: 50px;
     height: 50px;

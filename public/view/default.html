@@ -9,6 +9,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Sofia" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Exo+2" rel="stylesheet">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.1/css/all.css" integrity="sha384-5sAR7xN1Nv6T6+dT2mhtzEpVJvfS3NScPQTrOxhwjIuvcA67KV2R5Jz6kr4abQsz"
         crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" media="screen" href="/static/css/style.css" />
@@ -137,9 +138,12 @@
         }
 
         function setScore() {
+            let swat = numeral(fly.getSwatCount()).format('000000')
+            let points = numeral(fly.getScore()).format('000000')
+
             $("#points")
-                .html(`<i class="fas fa-skull"></i>&nbsp; <span> ${fly.getSwatCount()}</span>  &nbsp; &nbsp;  
-            <i class="fas fa-coins"></i>&nbsp;<span>${fly.getScore()} </span>`)
+                .html(`<i class="fas fa-skull"></i>&nbsp; <span> ${swat}</span>  &nbsp; &nbsp;  
+            <i class="fas fa-coins"></i>&nbsp;<span>${points} </span>`)
         }
 
         var fly = new flySquat();
