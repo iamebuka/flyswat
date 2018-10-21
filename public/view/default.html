@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>fly</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Sofia" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Exo+2" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" media="screen" href="/static/css/style.css" />
+
+</head>
+
+<body>
+    <div id="credit" class="states">
+
+    </div>
+    <div id="start" class="states">
+        <div id="points">1000</div>
+    </div>
+    <div id="hscores" class="states">
+
+    </div>
+    <div id="home" class="states">
+        <a href="#start">New Game</a>
+        <a href="#hscores">High Scores</a>
+        <a href="#hscores">High Scores</a>
+        <a href="#credit">Credit</a>
+        <a href="#credit">Credit</a>
+    </div>
+
+
+    <script>
+        var timer
+        var flySquat = function (obj = {}) {
+            this.x = Math.floor(Math.random() * (window.innerWidth - 150)) + 50
+            this.y = Math.floor(Math.random() * (window.innerHeight - 150)) + 50
+            this.points = 0
+            this.counter = 0
+            this.swatcount = 0
+            this.state = 0
+        }
+
+
+
+        flySquat.prototype.newFly = function (obj) {
+            let randomY = Math.floor(Math.random() * (window.innerWidth - 150)) + 50;
+            let randomX = Math.floor(Math.random() * (window.innerHeight - 150)) + 50
+            $("<span class='fly'></span>").css({ "top": randomX, "left": randomY })
+                .appendTo("#start")
+            this.counter += 1;
+
+        }
+
+        flySquat.prototype.pause = function () { clearTimeout(timer) }
+        flySquat.prototype.play = function () {
+            var rSpeed;
+            rSpeed = this.swatcount < 20 ? ((5 / 1) * 1000)
+                : this.swatcount < 40 ? (Math.ceil(5 / 2) * 1000)
+                    : this.swatcount < 80 ? (Math.ceil(5 / 3) * 1000)
+                        : this.swatcount < 150 ? (1000)
+                            : this.swatcount < 200 ? 500 : 100
+
+            this.counter < 21 ? sound().volume = 0.1
+                : this.counter < 41 ? sound().volume = 0.2
+                    : this.counter < 61 ? sound().volume = 0.3
+                        : this.counter < 81 ? sound().volume = 0.4
+                            : this.counter < 101 ? sound().volume = 0.5
+                                : this.counter < 121 ? sound().volume = 0.6
+                                    : this.counter < 141 ? sound().volume = 0.7
+                                        : this.counter < 161 ? sound().volume = 0.8
+                                            : this.counter < 181 ? sound().volume = 0.9 : sound().volume = 1
+
+            this.newFly();
+
+            timer = setTimeout(() => { this.play() }, rSpeed)
+            console.log("timer: ", timer)
+            if (this.counter > 200) { clearTimeout(timer); setHighScore(); alert("game over") }//gameover
+        }
+
+        flySquat.prototype.getScore = function () {
+            return this.points
+        }
+
+        flySquat.prototype.getFlies = function () { return this.counter }
+        flySquat.prototype.getSwatCount = function () { return this.swatcount }
+
+        function setHighScore() {
+            let newUser = prompt("enter username")
+            if (localStorage) {
+                var hscores = localStorage.getItem("scores")
+
+                if (hscores) { //if localstorage already init?
+                    let scores = JSON.parse(hscores);
+                    if (!scores[newUser]) {
+                        scores[newUser] = 32;
+                    }
+                } else {
+                    let newHscore = {}
+                    newHscore[newUser] = 32344
+                    localStorage.setItem("scores", JSON.stringify(newHscore))
+
+                }
+            }
+
+        }
+
+        function getHighScores() {
+            let scores = {}
+            if (localStorage) {
+                let hscores = localStorage.getItem("scores")
+                if (hscores) {
+                    scores = JSON.parse(hscores);
+                }
+            }
+            return scores;
+        }
+
+        function setScore() {
+            $("#points")
+                .html(`<i class="fas fa-skull"></i> Killed: ${fly.getSwatCount()}   
+            <i class="fas fa-coins"></i>points:  ${fly.getScore()}`)
+        }
+
+        var fly = new flySquat();
+        var backSound = document.querySelector("audio");
+
+
+
+
+        var Routes = {
+            "#home": function () {
+                setScore();
+            },
+            "#start": function () {
+                setScore();
+                fly.play();
+                sound().play()
+            },
+            "#hscores": function () {
+                //limit only top 5 high score
+                let scores = getHighScores();
+                let html = htmlTemplateScorePage(scores);
+                $("#hscores").html(html);
+            },
+            "#credit": function () { }
+        }
+
+
+        function htmlTemplateScorePage(data) {
+            let htm = `<ul>
+                <li>High scores</li>
+                `
+            for (score in data) {
+                htm += `<li> ${score} </li><li> ${data[score]}</li>`
+            }
+            htm += `</ul>`
+
+            return htm
+        }
+
+
+        function navigateTO(page) {
+            /*hide other pages fire the onload event 
+             for the page
+            */
+            var pages = document.querySelectorAll(".states");
+
+            pages.forEach((page) => {
+                if (!page.classList.contains("hide")) {
+                    page.classList.add("hide");
+                }
+            })
+
+            if (page) {
+                let p = document.querySelector(`${page}`);
+                if (p.classList.contains("hide")) p.classList.remove("hide")
+            }
+
+            clearTimeout(timer);
+            sound().currentTime = 1
+            sound().pause()
+
+            if (Routes[page]) {
+                Routes[page]()
+            } else {
+                Routes["#home"]();
+            }
+        }
+
+        function sound() {
+            let audio = document.createElement("audio")
+            audio.src = "/static/sound/Bee-noise.mp3";
+            return audio
+        }
+
+        //event handlers
+
+        //handles clicking on the fly; increments points and reduces counts of fly
+        $(document).on("click", ".fly", function () {
+            fly.points += 5;
+            fly.counter -= 1;
+            fly.swatcount += 1;
+
+            $(this).remove();
+            setScore();
+        })
+
+        //handle routing on page load
+        window.addEventListener("load", function (e) {
+            let page = location.hash;
+            navigateTO(page)
+        })
+
+        //states are handled using hash, handles state change
+        window.addEventListener("hashchange", function (e) {
+            let page = location.hash;
+            navigateTO(page)
+
+        })
+
+
+
+
+
+
+
+    </script>
+</body>
+
+</html>
