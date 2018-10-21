@@ -3,7 +3,7 @@ body{
   margin:0;
     color: #fff;
     background-color: #000;
-    transition: all 1s ease-in-out 0ms;
+    transition: all 3s ease-in-out 0ms;
     font-family: 'Exo 2', sans-serif;
     
 }
@@ -22,19 +22,56 @@ body{
     z-index: 1000;
 }
 #start{
-    background-color: #000;
     cursor: url("/static/img/fly.jpg");
 }
 #start:target{
     z-index: 1000; 
 }
+
 #start #points{
     position: absolute;
     right:0px;
     top:0px;
-    width: 200px;
+    min-width: 50px;
     display:block;
-    padding:15px;
+    color:red;
+    padding:15px 20px;
+    font-size: 25px;
+}
+
+
+
+a.btn{
+    margin: 10px auto auto;
+    padding:10px;
+    text-align: center;
+    display:block;
+    width: 200px;
+    background-color: #845ec2;
+    border: 2px solid #fff;
+    font-weight: 700px;
+    font-size: 20px;
+    color: #fff;
+    text-decoration: none;
+}
+a.btn:first-child{
+    margin-top: 20vh
+  
+}
+a.previous {
+	padding: 12px;
+	text-align: center;
+	display: block;
+	width: 41px;
+	font-weight: 700px;
+    font-size: 30px;
+    color:#fff;
+	text-decoration: none;
+}
+#points span{
+    color:#ccc;
+    font-weight: 800;
+  
 }
 #home{
    
@@ -43,15 +80,12 @@ body{
 #home:target{
     z-index: 1000;
 }
-#hscores{
-    background-color: green 
-}
 #hscores:target{
     z-index: 1000;
 }
 #hscores ul{
 width: 300px;
-margin: 25vh auto 0px;
+margin: 20vh auto 0px;
 list-style: none;
 padding: 0px;
 display:flex;
@@ -70,23 +104,7 @@ display:flex;
   
 }
 
-a{
-    margin: 10px auto auto;
-    padding:10px;
-    text-decoration: none;
-    text-align: center;
-    display:block;
-    width: 200px;
-    background-color: #845ec2;
-    border: 2px solid #fff;
-        font-weight: 700px;
-    font-size: 20px;
-    color: #fff;
-}
-a:first-child{
-    margin-top: 25vh
-  
-}
+
 #talk{
    background-color: #ff8066;
     background-size: cover;
@@ -164,8 +182,8 @@ a:first-child{
     animation: blip 1s ease-in-out 1ms reverse infinite;
     display:block;
     background: brown;
-    width: 50px;
-height: 50px;
+    width: 30px;
+height: 30px;
 background-repeat: no-repeat;
 background-position: 1px -3px;
 
@@ -214,7 +232,10 @@ color: #fff;
     background-color: red;
 }
 @media (min-width: 720px ){
-
+.fly{
+    width: 50px;
+    height: 50px;
+}
     .box{
          height:30%;
          width:46%;

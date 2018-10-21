@@ -9,34 +9,52 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Sofia" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Exo+2" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.1/css/all.css" integrity="sha384-5sAR7xN1Nv6T6+dT2mhtzEpVJvfS3NScPQTrOxhwjIuvcA67KV2R5Jz6kr4abQsz"
+        crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" media="screen" href="/static/css/style.css" />
 
 </head>
 
 <body>
     <div id="credit" class="states">
+        <div class="header">
+            <a class="previous" href="#">
+                <i class="fas fa-arrow-left"></i>
+            </a>
 
+        </div>
     </div>
     <div id="start" class="states">
-        <div id="points">1000</div>
-    </div>
-    <div id="hscores" class="states">
+        <div class="header">
+            <a class="previous" href="#">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div id="points"></div>
+        </div>
 
     </div>
+    <div id="hscores" class="states">
+        <div class="header">
+            <a class="previous" href="#">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+
+        </div>
+    </div>
     <div id="home" class="states">
-        <a href="#start">New Game</a>
-        <a href="#hscores">High Scores</a>
-        <a href="#hscores">High Scores</a>
-        <a href="#credit">Credit</a>
-        <a href="#credit">Credit</a>
+        <a class="btn" href="#start">New Game</a>
+        <a class="btn" href="#hscores">High Scores</a>
+        <a class="btn" href="#hscores">High Scores</a>
+        <a class="btn" href="#credit">Credit</a>
+        <a class="btn" href="#credit">Credit</a>
     </div>
 
 
     <script>
         var timer
         var flySquat = function (obj = {}) {
-            this.x = Math.floor(Math.random() * (window.innerWidth - 150)) + 50
-            this.y = Math.floor(Math.random() * (window.innerHeight - 150)) + 50
+            this.x = Math.floor(Math.random() * (window.innerWidth - 30)) + 40
+            this.y = Math.floor(Math.random() * (window.innerHeight - 30)) + 50
             this.points = 0
             this.counter = 0
             this.swatcount = 0
@@ -77,7 +95,7 @@
 
             timer = setTimeout(() => { this.play() }, rSpeed)
             console.log("timer: ", timer)
-            if (this.counter > 200) { clearTimeout(timer); setHighScore(); alert("game over") }//gameover
+            if (this.counter > 200) { clearTimeout(timer); this.setHighScore(); }//gameover
         }
 
         flySquat.prototype.getScore = function () {
@@ -87,27 +105,27 @@
         flySquat.prototype.getFlies = function () { return this.counter }
         flySquat.prototype.getSwatCount = function () { return this.swatcount }
 
-        function setHighScore() {
-            let newUser = prompt("enter username")
+        flySquat.prototype.setHighScore = function () {
+            let user = prompt("Game Over \n Enter username")
             if (localStorage) {
                 var hscores = localStorage.getItem("scores")
 
                 if (hscores) { //if localstorage already init?
                     let scores = JSON.parse(hscores);
-                    if (!scores[newUser]) {
-                        scores[newUser] = 32;
+                    if (!scores[user]) {
+                        scores[user] = this.points;
                     }
                 } else {
-                    let newHscore = {}
-                    newHscore[newUser] = 32344
-                    localStorage.setItem("scores", JSON.stringify(newHscore))
+                    let score = {}
+                    score[user] = this.points
+                    localStorage.setItem("scores", JSON.stringify(score))
 
                 }
             }
 
         }
 
-        function getHighScores() {
+        flySquat.prototype.getHighScores = function () {
             let scores = {}
             if (localStorage) {
                 let hscores = localStorage.getItem("scores")
@@ -120,8 +138,8 @@
 
         function setScore() {
             $("#points")
-                .html(`<i class="fas fa-skull"></i> Killed: ${fly.getSwatCount()}   
-            <i class="fas fa-coins"></i>points:  ${fly.getScore()}`)
+                .html(`<i class="fas fa-skull"></i>&nbsp; <span> ${fly.getSwatCount()}</span>  &nbsp; &nbsp;  
+            <i class="fas fa-coins"></i>&nbsp;<span>${fly.getScore()} </span>`)
         }
 
         var fly = new flySquat();
@@ -141,7 +159,7 @@
             },
             "#hscores": function () {
                 //limit only top 5 high score
-                let scores = getHighScores();
+                let scores = fly.getHighScores();
                 let html = htmlTemplateScorePage(scores);
                 $("#hscores").html(html);
             },
