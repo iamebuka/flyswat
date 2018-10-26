@@ -17,6 +17,14 @@
 </head>
 
 <body>
+    <div id="instrctions" class="states">
+        <div class="header">
+            <a class="previous" href="#">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+
+        </div>
+    </div>
     <div id="credit" class="states">
         <div class="header">
             <a class="previous" href="#">
@@ -41,154 +49,226 @@
             </a>
 
         </div>
+        <ul id="hs">
+
+        </ul>
     </div>
     <div id="home" class="states">
-        <a class="btn" href="#start">New Game</a>
-        <a class="btn" href="#hscores">High Scores</a>
-        <a class="btn" href="#hscores">High Scores</a>
-        <a class="btn" href="#credit">Credit</a>
-        <a class="btn" href="#credit">Credit</a>
+
     </div>
 
 
     <script>
-        var timer
-        var flySquat = function (obj = {}) {
-            this.x = Math.floor(Math.random() * (window.innerWidth - 30)) + 40
-            this.y = Math.floor(Math.random() * (window.innerHeight - 30)) + 50
-            this.points = 0
-            this.counter = 0
-            this.swatcount = 0
-            this.state = 0
-        }
+        var swat = (function ($, document) {
+            var gamesound = document.createElement("audio")
+            var gameSource = "/static/sound/Bee-noise.mp3";
+            var points = 0;
+            var swatcount = 0;
+            var counter = 0
+            var state = 0 //{play: 1, stop: 0, pause: 2};
+            var timer
+            function init() {
+                points = 0;
+                swatcount = 0;
+                state = 1;
+                counter = 0;
+                console.log("init state: ", state)
+            }
+            function newfly() {
+                let randomY = Math.floor(Math.random() * (window.innerHeight - 150 + 1)) + 150;
+                let randomX = Math.floor(Math.random() * (window.innerWidth - 50 + 1)) + 0
+                $("<span class='fly'></span>").css({ "top": randomY, "left": randomX })
+                    .appendTo("#start")
+                counter += 1;
+            }
+            function pause() {
+                if (state === 1) {
+                    clearTimeout(timer);
+                    state = 2;
+                    stopBackgroundSound();
 
+                }
+                console.log("pause state in class:", state)
+            }
+            function play() {
+                var rSpeed;
+                if (state === 2) state = 1 //changes state to play if paused
+                if (state === 0) init() //changes state to play after stop also initialize evironment variables
+                if (state === 1) { //
+                    console.log(`play loop, state: ${state}`)
+                    rSpeed = swatcount < 20 ? ((4 / 1) * 1000)
+                        : swatcount < 40 ? (Math.ceil(4 / 2) * 1000)
+                            : swatcount < 80 ? (Math.floor(4 / 3) * 1000)
+                                : swatcount < 150 ? (500)
+                                    : swatcount < 200 ? 300 : 100
 
+                    counter < 1 ? gamesound.volume = 0.1
+                        : counter < 2 ? gamesound.volume = 0.2
+                            : counter < 3 ? gamesound.volume = 0.3
+                                : counter < 4 ? gamesound.volume = 0.4
+                                    : counter < 5 ? gamesound.volume = 0.5
+                                        : counter < 6 ? gamesound.volume = 0.6
+                                            : counter < 7 ? gamesound.volume = 0.7
+                                                : counter < 8 ? gamesound.volume = 0.8
+                                                    : counter < 9 ? gamesound.volume = 0.9
+                                                        : gamesound.volume = 1;
 
-        flySquat.prototype.newFly = function (obj) {
-            let randomY = Math.floor(Math.random() * (window.innerWidth - 150)) + 50;
-            let randomX = Math.floor(Math.random() * (window.innerHeight - 150)) + 50
-            $("<span class='fly'></span>").css({ "top": randomX, "left": randomY })
-                .appendTo("#start")
-            this.counter += 1;
+                    newfly()
 
-        }
-
-        flySquat.prototype.pause = function () { clearTimeout(timer) }
-        flySquat.prototype.play = function () {
-            var rSpeed;
-            rSpeed = this.swatcount < 20 ? ((5 / 1) * 1000)
-                : this.swatcount < 40 ? (Math.ceil(5 / 2) * 1000)
-                    : this.swatcount < 80 ? (Math.ceil(5 / 3) * 1000)
-                        : this.swatcount < 150 ? (1000)
-                            : this.swatcount < 200 ? 500 : 100
-
-            this.counter < 21 ? sound().volume = 0.1
-                : this.counter < 41 ? sound().volume = 0.2
-                    : this.counter < 61 ? sound().volume = 0.3
-                        : this.counter < 81 ? sound().volume = 0.4
-                            : this.counter < 101 ? sound().volume = 0.5
-                                : this.counter < 121 ? sound().volume = 0.6
-                                    : this.counter < 141 ? sound().volume = 0.7
-                                        : this.counter < 161 ? sound().volume = 0.8
-                                            : this.counter < 181 ? sound().volume = 0.9 : sound().volume = 1
-
-            this.newFly();
-
-            timer = setTimeout(() => { this.play() }, rSpeed)
-            console.log("timer: ", timer)
-            if (this.counter > 200) { clearTimeout(timer); this.setHighScore(); }//gameover
-        }
-
-        flySquat.prototype.getScore = function () {
-            return this.points
-        }
-
-        flySquat.prototype.getFlies = function () { return this.counter }
-        flySquat.prototype.getSwatCount = function () { return this.swatcount }
-
-        flySquat.prototype.setHighScore = function () {
-            let user = prompt("Game Over \n Enter username")
-            if (localStorage) {
-                var hscores = localStorage.getItem("scores")
-
-                if (hscores) { //if localstorage already init?
-                    let scores = JSON.parse(hscores);
-                    if (!scores[user]) {
-                        scores[user] = this.points;
-                    }
-                } else {
-                    let score = {}
-                    score[user] = this.points
-                    localStorage.setItem("scores", JSON.stringify(score))
+                    if (!gamesound.src) { gamesound.src = gameSource; }
+                    gamesound.play() //play game sound if it isnt started already
+                    //game loop starts here
+                    timer = setTimeout(() => { play() }, rSpeed)
+                    if (counter > 9) { clearTimeout(timer); stop(); setHighScore(); }  //gameover on fly counter greater than 10
 
                 }
             }
 
-        }
+            function getStatistics() {
+                return {
+                    swatCount: swatcount,
+                    points: points,
+                    flies: counter
+                }
 
-        flySquat.prototype.getHighScores = function () {
-            let scores = {}
-            if (localStorage) {
-                let hscores = localStorage.getItem("scores")
-                if (hscores) {
+            }
+
+            function setHighScore() {
+                let user = prompt("Game Over \n Enter username")
+                var scores;
+                if (localStorage) {
+                    var hscores = localStorage.getItem("scores")
+                    //if localstorage already init?
                     scores = JSON.parse(hscores);
+                    if (!scores) scores = {}
+                    if (!scores[user]) {
+                        scores[user] = points;
+                        localStorage.setItem("scores", JSON.stringify(scores))
+                    }
+
                 }
             }
-            return scores;
-        }
+            function getHighScores() {
+                let scores = {}
+                if (localStorage) {
+                    let hscores = localStorage.getItem("scores")
+                    if (hscores) {
+                        scores = JSON.parse(hscores);
+                    }
+                }
+                return scores;
+            }
+            function getState() {
+                return state;
+            }
+            function swat() {
+                swatcount += 1;
+                counter -= 1;
+                points += 5;
+
+            };
+
+            function stopBackgroundSound() {
+                gamesound.currentTime = 0;
+                gamesound.pause()
+            }
+            function stop() {
+                //pause timer and reset state
+                $(".fly").remove();
+                stopBackgroundSound()
+                clearTimeout(timer);
+                state = 0;
+            }
+
+            //add reset highscore botton
+            return {
+                state: getState,
+                pause: pause,
+                play: play,
+                stop: stop,
+                statistics: getStatistics,
+                highscores: getHighScores,
+                swat: swat
+
+            }
+        })(jQuery, document)
+
+
+
+
+
+
+
+
+
+
 
         function setScore() {
-            let swat = numeral(fly.getSwatCount()).format('000000')
-            let points = numeral(fly.getScore()).format('000000')
+            let swat = numeral(flyswat.statistics().swatCount).format('000000')
+            let points = numeral(flyswat.statistics().points).format('000000')
 
             $("#points")
                 .html(`<i class="fas fa-skull"></i>&nbsp; <span> ${swat}</span>  &nbsp; &nbsp;  
             <i class="fas fa-coins"></i>&nbsp;<span>${points} </span>`)
         }
 
-        var fly = new flySquat();
-        var backSound = document.querySelector("audio");
-
-
+        var flyswat = swat;
 
 
         var Routes = {
             "#home": function () {
                 setScore();
+                let html = htmlTemplateDefault(flyswat.state())
+                $("#home").html(html);
             },
             "#start": function () {
                 setScore();
-                fly.play();
-                sound().play()
+                flyswat.play();
+
             },
             "#hscores": function () {
                 //limit only top 5 high score
-                let scores = fly.getHighScores();
+                let scores = flyswat.highscores();
                 let html = htmlTemplateScorePage(scores);
-                $("#hscores").html(html);
+                $("#hs").html(html);
             },
             "#credit": function () { }
         }
 
 
         function htmlTemplateScorePage(data) {
-            let htm = `<ul>
+            let htm = `
                 <li>High scores</li>
                 `
             for (score in data) {
                 htm += `<li> ${score} </li><li> ${data[score]}</li>`
             }
-            htm += `</ul>`
 
             return htm
         }
 
+        function htmlTemplateDefault(state) {
+            let html = `
+            ${
+                (state === 2) ? "<a class='btn' href='#start'>Resume</a> <a class='btn' href='#start'>New Game</a>" :
+                    "<a class='btn' href='#start'>New Game</a>"
+                }
+        <a class="btn" href="#hscores">High Scores</a>
+            <a class="btn" href="#hscores">High Scores</a>
+            <a class="btn" href="#instrctions">Instrctions</a>
+            <a class="btn" href="#credit">Credit</a>`
+
+            return html
+        }
 
         function navigateTO(page) {
             /*hide other pages fire the onload event 
              for the page
             */
             var pages = document.querySelectorAll(".states");
+
+            flyswat.pause() //handle pause on navigate to other page
+            console.log(`navigation: ${page} state: ${flyswat.state()} `)
 
             pages.forEach((page) => {
                 if (!page.classList.contains("hide")) {
@@ -201,9 +281,6 @@
                 if (p.classList.contains("hide")) p.classList.remove("hide")
             }
 
-            clearTimeout(timer);
-            sound().currentTime = 1
-            sound().pause()
 
             if (Routes[page]) {
                 Routes[page]()
@@ -212,20 +289,10 @@
             }
         }
 
-        function sound() {
-            let audio = document.createElement("audio")
-            audio.src = "/static/sound/Bee-noise.mp3";
-            return audio
-        }
-
         //event handlers
-
         //handles clicking on the fly; increments points and reduces counts of fly
         $(document).on("click", ".fly", function () {
-            fly.points += 5;
-            fly.counter -= 1;
-            fly.swatcount += 1;
-
+            flyswat.swat();
             $(this).remove();
             setScore();
         })
