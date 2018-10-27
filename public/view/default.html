@@ -12,6 +12,7 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.1/css/all.css" integrity="sha384-5sAR7xN1Nv6T6+dT2mhtzEpVJvfS3NScPQTrOxhwjIuvcA67KV2R5Jz6kr4abQsz"
         crossorigin="anonymous">
+    <link rel="man" />
     <link rel="stylesheet" type="text/css" media="screen" href="/static/css/style.css" />
 
 </head>
@@ -65,36 +66,37 @@
             var points = 0;
             var swatcount = 0;
             var counter = 0
-            var state = 0 //{play: 1, stop: 0, pause: 2};
+            var states = { playing: 1, stop: 0, paused: 2 };
+            var state = states.stop;
             var timer
             function init() {
                 points = 0;
                 swatcount = 0;
-                state = 1;
+                state = states.playing;
                 counter = 0;
                 console.log("init state: ", state)
             }
             function newfly() {
-                let randomY = Math.floor(Math.random() * (window.innerHeight - 150 + 1)) + 150;
-                let randomX = Math.floor(Math.random() * (window.innerWidth - 50 + 1)) + 0
+                let randomY = Math.floor(Math.random() * (window.innerHeight - 200 + 1)) + 50;
+                let randomX = Math.floor(Math.random() * (window.innerWidth - 70 + 1)) + 0
+
                 $("<span class='fly'></span>").css({ "top": randomY, "left": randomX })
                     .appendTo("#start")
                 counter += 1;
             }
             function pause() {
-                if (state === 1) {
+                if (state === states.playing) {
+                    state = states.paused;
                     clearTimeout(timer);
-                    state = 2;
                     stopBackgroundSound();
-
                 }
                 console.log("pause state in class:", state)
             }
             function play() {
                 var rSpeed;
-                if (state === 2) state = 1 //changes state to play if paused
-                if (state === 0) init() //changes state to play after stop also initialize evironment variables
-                if (state === 1) { //
+                if (state == states.paused) state = states.playing //changes state to play if paused
+                if (state == states.stop) init() //changes state to play after stop also initialize evironment variables
+                if (state == states.playing) { //
                     console.log(`play loop, state: ${state}`)
                     rSpeed = swatcount < 20 ? ((4 / 1) * 1000)
                         : swatcount < 40 ? (Math.ceil(4 / 2) * 1000)
@@ -177,11 +179,12 @@
                 $(".fly").remove();
                 stopBackgroundSound()
                 clearTimeout(timer);
-                state = 0;
+                state = states.stop;
             }
 
             //add reset highscore botton
             return {
+                init: init,
                 state: getState,
                 pause: pause,
                 play: play,
@@ -203,7 +206,7 @@
 
 
 
-        function setScore() {
+        function setStatistics() {
             let swat = numeral(flyswat.statistics().swatCount).format('000000')
             let points = numeral(flyswat.statistics().points).format('000000')
 
@@ -214,25 +217,64 @@
 
         var flyswat = swat;
 
+        var app = {
+            pages: document.querySelectorAll(".states"),
+            routes: {
+                "#home": function () {
+                    setStatistics(); //set game statistics
+                    let html = htmlTemplateDefault(flyswat.state())
+                    $("#home").html(html);
+                },
+                "#start": function () {
+                    setStatistics();
+                    flyswat.play();
 
-        var Routes = {
-            "#home": function () {
-                setScore();
-                let html = htmlTemplateDefault(flyswat.state())
-                $("#home").html(html);
-            },
-            "#start": function () {
-                setScore();
-                flyswat.play();
+                },
+                "#hscores": function () {
+                    //limit only top 5 high score
+                    let scores = flyswat.highscores();
+                    let Arr = Object.keys(scores)
+                    let flattenObj = []
+                    Arr.forEach(a => flattenObj.push({ name: a, score: scores[a] }))
+                    flattenObj.sort((a, b) => b.score - a.score)
+                    let top = flattenObj.slice(0, 10)
+                    console.log(top)
+                    let html = htmlTemplateScorePage(top);
+                    $("#hs").html(html);
+                },
+                "#credit": function () { },
 
             },
-            "#hscores": function () {
-                //limit only top 5 high score
-                let scores = flyswat.highscores();
-                let html = htmlTemplateScorePage(scores);
-                $("#hs").html(html);
-            },
-            "#credit": function () { }
+            navigateTo: function navigateTO(route) {
+                /*hide other pages fire the onload event 
+                 for the page
+                */
+
+                flyswat.pause() //handle pause on navigate to other page
+                
+                app.pages.forEach((page) => {
+                    if (!page.classList.contains("hide")) {
+                        page.classList.add("hide");
+                    }
+                })
+
+                if (route) {
+                    let p = document.querySelector(`${route}`);
+                    if (p.classList.contains("hide")) p.classList.remove("hide")
+                }
+
+  console.log(`navigation: ${app.routes} state: ${flyswat.state()} `)
+                if (app.routes[route]) {
+                    app.routes[route]()
+                  
+console.log("main")
+                } else {
+                    app.routes["#home"]();
+                    console.log(`else navigation: ${route} state: ${flyswat.state()} `)
+
+                }
+            }
+
         }
 
 
@@ -240,20 +282,25 @@
             let htm = `
                 <li>High scores</li>
                 `
-            for (score in data) {
-                htm += `<li> ${score} </li><li> ${data[score]}</li>`
+            for (scores in data) {
+                htm += `<li> ${data[scores].name} </li><li> ${data[scores].score}</li>`
             }
 
             return htm
         }
 
         function htmlTemplateDefault(state) {
+            console.log("state: hehhe", state)
             let html = `
             ${
                 (state === 2) ? "<a class='btn' href='#start'>Resume</a> <a class='btn' href='#start'>New Game</a>" :
                     "<a class='btn' href='#start'>New Game</a>"
                 }
-        <a class="btn" href="#hscores">High Scores</a>
+           
+
+
+            
+            <a class="btn" href="#hscores">High Scores</a>
             <a class="btn" href="#hscores">High Scores</a>
             <a class="btn" href="#instrctions">Instrctions</a>
             <a class="btn" href="#credit">Credit</a>`
@@ -261,52 +308,25 @@
             return html
         }
 
-        function navigateTO(page) {
-            /*hide other pages fire the onload event 
-             for the page
-            */
-            var pages = document.querySelectorAll(".states");
-
-            flyswat.pause() //handle pause on navigate to other page
-            console.log(`navigation: ${page} state: ${flyswat.state()} `)
-
-            pages.forEach((page) => {
-                if (!page.classList.contains("hide")) {
-                    page.classList.add("hide");
-                }
-            })
-
-            if (page) {
-                let p = document.querySelector(`${page}`);
-                if (p.classList.contains("hide")) p.classList.remove("hide")
-            }
-
-
-            if (Routes[page]) {
-                Routes[page]()
-            } else {
-                Routes["#home"]();
-            }
-        }
 
         //event handlers
         //handles clicking on the fly; increments points and reduces counts of fly
         $(document).on("click", ".fly", function () {
             flyswat.swat();
             $(this).remove();
-            setScore();
+            setStatistics();
         })
 
         //handle routing on page load
         window.addEventListener("load", function (e) {
-            let page = location.hash;
-            navigateTO(page)
+            let route = location.hash;
+            app.navigateTo(route)
         })
 
         //states are handled using hash, handles state change
         window.addEventListener("hashchange", function (e) {
-            let page = location.hash;
-            navigateTO(page)
+            let route = location.hash;
+            app.navigateTo(route)
 
         })
 
