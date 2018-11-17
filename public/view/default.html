@@ -150,7 +150,7 @@
 
 
 
-        var swat = (function ($, document, numeral, app) {
+        var swat = (function ($, document, numeral, app, window) {
             var gamesound = document.createElement("audio")
             var spiderTimer = document.querySelector("#timer")
             var gameSource = "/static/sound/Bee-noise.mp3";
@@ -283,7 +283,8 @@
                     }
 
                 }
-                app.navigateTo("#hscores")
+               
+                location.assign("#hscores")
             }
             function getHighScores() {
                 let scores = {}
@@ -426,7 +427,7 @@
             }
 
 
-        })(jQuery, document, numeral, app)
+        })(jQuery, document, numeral, app, window)
 
         var flyswat = swat;
         flyswat.init()
