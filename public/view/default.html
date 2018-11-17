@@ -199,7 +199,7 @@
                 let spider = randomNumber(50, 0);
                 let tile = emptyTiles.splice(rand, 1)[0];
 
-                if (counter > 100 && spider === 20 && spiderCount < 1) {
+                if (counter > 70 && spider === 20 && spiderCount < 1) {
                     $("<span class='spider'></span>")
                         .attr("data-pos", JSON.stringify(tile))
                         .css({ "top": tile.y, "left": tile.x })
