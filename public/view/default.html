@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>fly</title>
+    <title>swat</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Sofia" rel="stylesheet">
@@ -41,6 +41,7 @@
             </a>
             <div id="points"></div>
         </div>
+        <div id="board"></div>
 
     </div>
     <div id="hscores" class="states">
@@ -60,49 +61,181 @@
 
 
     <script>
-        var swat = (function ($, document) {
+        var app = {
+            pages: document.querySelectorAll(".states"),
+            routes: {
+                "#home": function () {
+
+                    let html = app.htmlTemplateDefault(flyswat.state())
+                    $("#home").html(html);
+                },
+                "#start": function () {
+
+                    flyswat.play();
+
+                },
+                "#hscores": function () {
+                    //limit only top 5 high score
+                    let scores = flyswat.highscores();
+                    let Arr = Object.keys(scores)
+                    let flattenObj = []
+                    Arr.forEach(a => flattenObj.push({ name: a, score: scores[a] }))
+                    flattenObj.sort((a, b) => b.score - a.score)
+                    let top = flattenObj.slice(0, 10)
+                    console.log(top)
+                    let html = app.htmlTemplateScorePage(top);
+                    $("#hs").html(html);
+                },
+                "#credit": function () { },
+
+            },
+            navigateTo: function navigateTO(route) {
+
+                flyswat.pause() //handle pause on navigate to other page
+
+                app.pages.forEach((page) => {
+                    if (!page.classList.contains("hide")) {
+                        page.classList.add("hide");
+                    }
+                })
+
+                if (route) {
+                    let p = document.querySelector(`${route}`);
+                    if (p.classList.contains("hide")) p.classList.remove("hide")
+                }
+
+                /*hide other pages fire the onload event 
+                for the page                */
+
+                if (app.routes[route]) {
+                    app.routes[route]()
+                    console.log(`fired onload event for ${route} route`)
+                } else {
+                    app.routes["#home"]();
+                    console.log(`fire onload event for ${route} route`)
+                }
+            },
+            htmlTemplateScorePage: function (data) {
+                let htm = `
+                <li>High scores</li>
+                `
+                for (scores in data) {
+                    htm += `<li> ${data[scores].name} </li><li> ${data[scores].score}</li>`
+                }
+
+                return htm
+            },
+            htmlTemplateDefault: function (state) {
+                console.log("state: hehhe", state)
+                let html = `
+            ${
+                    (state === 2) ? "<a class='btn' href='#start'>Resume</a>" :
+                        "<a class='btn' href='#start'>New Game</a>"
+                    }
+           
+
+
+            
+            <a class="btn" href="#hscores">High Scores</a>
+            <a class="btn" href="#hscores">High Scores</a>
+            <a class="btn" href="#instrctions">Instrctions</a>
+            <a class="btn" href="#credit">Credit</a>`
+
+                return html
+            }
+        }
+
+
+
+
+
+
+        var swat = (function ($, document, numeral, app) {
             var gamesound = document.createElement("audio")
+            var spiderTimer = document.querySelector("#timer")
             var gameSource = "/static/sound/Bee-noise.mp3";
             var points = 0;
             var swatcount = 0;
-            var counter = 0
-            var states = { playing: 1, stop: 0, paused: 2 };
-            var state = states.stop;
-            var timer
+            var counter = 0;
+            var spiderCount = 0
+            var states = { playing: 1, stop: 0, paused: 2, init: 3 };
+            var state = states.init;
+            var timer;
+            var emptyTiles = [];
+            var filledTiles = [];
+            var maxX = window.innerWidth// ((window.innerWidth - 60) / 60); //30
+            var maxY = window.innerHeight// ((window.innerHeight - 60) / 60); //40 for smaller balls
+
+
+            var animTimer = 0
+
             function init() {
                 points = 0;
                 swatcount = 0;
-                state = states.playing;
                 counter = 0;
-                console.log("init state: ", state)
-            }
-            function newfly() {
-                let randomY = Math.floor(Math.random() * (window.innerHeight - 200 + 1)) + 50;
-                let randomX = Math.floor(Math.random() * (window.innerWidth - 70 + 1)) + 0
+                setStatistics()
+                generateTiles()
 
-                $("<span class='fly'></span>").css({ "top": randomY, "left": randomX })
-                    .appendTo("#start")
-                counter += 1;
             }
+            function generateTiles() {
+                for (let x = 24; x <= (maxX - 40); x += 40) {//60 57
+                    for (let y = 60; y <= (maxY - 30); y += 35) {
+                        emptyTiles.push({
+                            x, y
+                        })
+                    }
+
+                }
+                console.log("empty tiles:", emptyTiles)
+            }
+
+            function randomNumber(max, min) {
+                return Math.floor(Math.random() * (max - min)) + min
+            }
+
+            function next() {
+
+                let rand = randomNumber(emptyTiles.length - 1, 0);
+                let spider = randomNumber(50, 0);
+                let tile = emptyTiles.splice(rand, 1)[0];
+
+                if (counter > 100 && spider === 20 && spiderCount < 1) {
+                    $("<span class='spider'></span>")
+                        .attr("data-pos", JSON.stringify(tile))
+                        .css({ "top": tile.y, "left": tile.x })
+                        .appendTo("#board")
+                    spiderCount += 1;
+                } else {
+                    $("<span class='fly'></span>")
+                        .attr("data-pos", JSON.stringify(tile))
+                        .css({ "top": tile.y, "left": tile.x })
+                        .appendTo("#board")
+                }
+                filledTiles.push(tile)
+                counter += 1;
+                console.log("filled tile:", filledTiles);
+            }
+
             function pause() {
                 if (state === states.playing) {
                     state = states.paused;
-                    clearTimeout(timer);
                     stopBackgroundSound();
+                    clearTimeout(timer);
                 }
-                console.log("pause state in class:", state)
             }
+
             function play() {
                 var rSpeed;
+                if (state == states.init) state = states.playing
                 if (state == states.paused) state = states.playing //changes state to play if paused
-                if (state == states.stop) init() //changes state to play after stop also initialize evironment variables
+                if (state == states.stop) init(); state = states.playing //changes state to play after stop also initialize evironment variables
                 if (state == states.playing) { //
-                    console.log(`play loop, state: ${state}`)
-                    rSpeed = swatcount < 20 ? ((4 / 1) * 1000)
-                        : swatcount < 40 ? (Math.ceil(4 / 2) * 1000)
-                            : swatcount < 80 ? (Math.floor(4 / 3) * 1000)
-                                : swatcount < 150 ? (500)
-                                    : swatcount < 200 ? 300 : 100
+
+                    rSpeed = (swatcount < 20) ? (500)
+                        : (swatcount < 40) ? (400)
+                            : (swatcount < 80) ? (300)
+                                : (swatcount < 150) ? (200)
+                                    : (swatcount < 200) ? 100 : 50
 
                     counter < 1 ? gamesound.volume = 0.1
                         : counter < 2 ? gamesound.volume = 0.2
@@ -115,13 +248,14 @@
                                                     : counter < 9 ? gamesound.volume = 0.9
                                                         : gamesound.volume = 1;
 
-                    newfly()
+
+                    next()
 
                     if (!gamesound.src) { gamesound.src = gameSource; }
                     gamesound.play() //play game sound if it isnt started already
                     //game loop starts here
                     timer = setTimeout(() => { play() }, rSpeed)
-                    if (counter > 9) { clearTimeout(timer); stop(); setHighScore(); }  //gameover on fly counter greater than 10
+                    if (isGameOver()) { clearTimeout(timer); stop(); setHighScore(); }  //gameover on fly counter greater than 10
 
                 }
             }
@@ -149,6 +283,7 @@
                     }
 
                 }
+                app.navigateTo("#hscores")
             }
             function getHighScores() {
                 let scores = {}
@@ -156,17 +291,31 @@
                     let hscores = localStorage.getItem("scores")
                     if (hscores) {
                         scores = JSON.parse(hscores);
+                        localStorage.setItem("scores", JSON.stringify(scores))
                     }
                 }
                 return scores;
             }
+
+            function isGameOver() {
+                return emptyTiles.length < 1
+            }
+
             function getState() {
                 return state;
             }
-            function swat() {
+            function swatFly() {
                 swatcount += 1;
                 counter -= 1;
                 points += 5;
+
+            };
+            function swatSpider() {
+                let countsOfFliesExcludingSpiders = counter - spiderCount
+                swatcount += counter;
+                points += (5 * countsOfFliesExcludingSpiders) + (spiderCount * 7);
+                counter = 0;
+                spiderCount = 0
 
             };
 
@@ -175,14 +324,95 @@
                 gamesound.pause()
             }
             function stop() {
-                //pause timer and reset state
                 $(".fly").remove();
                 stopBackgroundSound()
                 clearTimeout(timer);
                 state = states.stop;
+
             }
 
-            //add reset highscore botton
+            function setStatistics() {
+                let swat = numeral(flyswat.statistics().swatCount).format('000000')
+                let points = numeral(flyswat.statistics().points).format('000000')
+
+                $("#points")
+                    .html(`<i class="fas fa-skull"></i>&nbsp; <span> ${swat}</span>  &nbsp; &nbsp;  
+            <i class="fas fa-coins"></i>&nbsp;<span>${points} </span>`)
+            }
+
+            //handle routing on page load
+            window.addEventListener("load", function (e) {
+                let route = location.hash;
+                app.navigateTo(route)
+            })
+
+            //states are handled using hash, handles state change
+            window.addEventListener("hashchange", function (e) {
+                let route = location.hash;
+                app.navigateTo(route)
+
+            })
+
+            //handles clicking on the fly; increments points and reduces counts of fly
+            $(document).on("click", ".fly", function () {
+                /*
+                 1) First retrieve position of the object, extract the index of the tile
+                    from the filled tiles and remove it, then push it to the empty tiles
+                 2) Remove it from view
+                 3) Update counters and set in view
+                 */
+                let pos = $(this).data("pos")
+
+                console.log("clicked fly", JSON.stringify(pos))
+                let index = filledTiles.findIndex((x) => JSON.stringify(x) == JSON.stringify(pos))
+                let tile = filledTiles.splice(index, 1);
+                emptyTiles.push(...tile)
+                $(this).remove();
+                swatFly()
+                setStatistics();
+            })
+
+
+            $(document).on("click", ".spider", function () {
+                /*
+                1) Move all tiles in filled tile to empty empty tiles
+                2) empty the board.
+                3) update counters and update point in views
+                */
+                emptyTiles = [...emptyTiles, ...filledTiles]
+                filledTiles = []
+                $("#board").empty();
+                $("#timer").remove()
+                swatSpider()
+                setStatistics();
+            })
+
+            document.addEventListener("animationstart", function (e) {
+                console.log("animation start", e)
+                if (e.animationName == "blip") {
+                    let a = $("<div> </div>").text("10");
+                    $("<div id='timer' class='echo'></div>").append(a).appendTo("#start")
+                    animTimer = setInterval(function () {
+                        let curr = $("#timer div").text()
+                        if (Number(curr) > 0) {
+                            $("#timer div").text((Number(curr) - 1))
+                        }
+
+                    }, 1000)
+                }
+
+            })
+
+            document.addEventListener("animationend", function (e) {
+                if (e.animationName == "blip") {
+                    let element = e.target;
+                    element.parentNode.removeChild(element);
+                    clearInterval(animTimer);
+                    $("#timer").remove()
+                }
+
+            })
+
             return {
                 init: init,
                 state: getState,
@@ -194,141 +424,15 @@
                 swat: swat
 
             }
-        })(jQuery, document)
 
 
-
-
-
-
-
-
-
-
-
-        function setStatistics() {
-            let swat = numeral(flyswat.statistics().swatCount).format('000000')
-            let points = numeral(flyswat.statistics().points).format('000000')
-
-            $("#points")
-                .html(`<i class="fas fa-skull"></i>&nbsp; <span> ${swat}</span>  &nbsp; &nbsp;  
-            <i class="fas fa-coins"></i>&nbsp;<span>${points} </span>`)
-        }
+        })(jQuery, document, numeral, app)
 
         var flyswat = swat;
-
-        var app = {
-            pages: document.querySelectorAll(".states"),
-            routes: {
-                "#home": function () {
-                    setStatistics(); //set game statistics
-                    let html = htmlTemplateDefault(flyswat.state())
-                    $("#home").html(html);
-                },
-                "#start": function () {
-                    setStatistics();
-                    flyswat.play();
-
-                },
-                "#hscores": function () {
-                    //limit only top 5 high score
-                    let scores = flyswat.highscores();
-                    let Arr = Object.keys(scores)
-                    let flattenObj = []
-                    Arr.forEach(a => flattenObj.push({ name: a, score: scores[a] }))
-                    flattenObj.sort((a, b) => b.score - a.score)
-                    let top = flattenObj.slice(0, 10)
-                    console.log(top)
-                    let html = htmlTemplateScorePage(top);
-                    $("#hs").html(html);
-                },
-                "#credit": function () { },
-
-            },
-            navigateTo: function navigateTO(route) {
-                /*hide other pages fire the onload event 
-                 for the page
-                */
-
-                flyswat.pause() //handle pause on navigate to other page
-                
-                app.pages.forEach((page) => {
-                    if (!page.classList.contains("hide")) {
-                        page.classList.add("hide");
-                    }
-                })
-
-                if (route) {
-                    let p = document.querySelector(`${route}`);
-                    if (p.classList.contains("hide")) p.classList.remove("hide")
-                }
-
-  console.log(`navigation: ${app.routes} state: ${flyswat.state()} `)
-                if (app.routes[route]) {
-                    app.routes[route]()
-                  
-console.log("main")
-                } else {
-                    app.routes["#home"]();
-                    console.log(`else navigation: ${route} state: ${flyswat.state()} `)
-
-                }
-            }
-
-        }
+        flyswat.init()
 
 
-        function htmlTemplateScorePage(data) {
-            let htm = `
-                <li>High scores</li>
-                `
-            for (scores in data) {
-                htm += `<li> ${data[scores].name} </li><li> ${data[scores].score}</li>`
-            }
 
-            return htm
-        }
-
-        function htmlTemplateDefault(state) {
-            console.log("state: hehhe", state)
-            let html = `
-            ${
-                (state === 2) ? "<a class='btn' href='#start'>Resume</a>" :
-                    "<a class='btn' href='#start'>New Game</a>"
-                }
-           
-
-
-            
-            <a class="btn" href="#hscores">High Scores</a>
-            <a class="btn" href="#hscores">High Scores</a>
-            <a class="btn" href="#instrctions">Instrctions</a>
-            <a class="btn" href="#credit">Credit</a>`
-
-            return html
-        }
-
-
-        //event handlers
-        //handles clicking on the fly; increments points and reduces counts of fly
-        $(document).on("click", ".fly", function () {
-            flyswat.swat();
-            $(this).remove();
-            setStatistics();
-        })
-
-        //handle routing on page load
-        window.addEventListener("load", function (e) {
-            let route = location.hash;
-            app.navigateTo(route)
-        })
-
-        //states are handled using hash, handles state change
-        window.addEventListener("hashchange", function (e) {
-            let route = location.hash;
-            app.navigateTo(route)
-
-        })
 
 
 
