@@ -12,4 +12,4 @@ app.get("/h", (req, res) => {
 app.get("/", (req, res) => {
     res.sendFile(__dirname + "/public/view/default.html")
 })
-app.listen(process.env.PORT || 5000, () => console.log("listening on port 5000"))
+app.listen(process.env.PORT || 5000, () => console.log("listening on port 50000"))
